@@ -1,3 +1,15 @@
+async function checkUser() {
+  const { data } = await client.auth.getSession();
+
+  if (!data.session) {
+    alert("Please login first!");
+    window.location.href = "index.html";
+  }
+}
+
+checkUser();
+
+
 async function loadPages() {
   const { data } = await client
     .from("love_sites")

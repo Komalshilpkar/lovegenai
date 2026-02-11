@@ -15,9 +15,20 @@ async function signUp() {
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  await client.auth.signInWithPassword({ email, password });
-  alert("Logged in!");
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("Logged in!");
+    window.location.href = "dashboard.html";
+  }
 }
+
 
 function goDashboard() {
   window.location.href = "dashboard.html";
