@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  color: white;
+}
+
+.container {
+  background: rgba(0,0,0,0.5);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  width: 400px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.dark-romantic {
+  background: linear-gradient(135deg, #000000, #4b0000);
+}
+
+.gold-luxury {
+  background: linear-gradient(135deg, #d4af37, #000000);
+}

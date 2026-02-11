@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard 💖</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Create Love Page</h2>
+
+  <input type="text" id="name" placeholder="Partner Name">
+
+  <select id="mood">
+    <option value="cute">Cute</option>
+    <option value="poetic">Poetic</option>
+    <option value="dramatic">Dramatic</option>
+  </select>
+
+  <select id="theme">
+    <option value="default">Free Theme</option>
+    <option value="dark-romantic">Premium Dark</option>
+    <option value="gold-luxury">Premium Gold</option>
+  </select>
+
+  <button onclick="createPage()">Generate</button>
+
+  <h3>Your Pages</h3>
+  <div id="pages"></div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/create.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
