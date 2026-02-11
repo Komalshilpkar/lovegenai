@@ -1,3 +1,4 @@
+const pathParts = window.location.pathname.split("/");
 const slug = window.location.pathname.split("/").pop();
 
 const SUPABASE_URL = "https://wqdkvdnxxaqgynypwnee.supabase.co";
