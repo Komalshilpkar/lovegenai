@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+console.log(SUPABASE_URL);
+
 async function signUp() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
