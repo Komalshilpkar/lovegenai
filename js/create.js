@@ -3,6 +3,8 @@ console.log("Generate clicked");
 async function createPage() {
   const { data } = await client.auth.getSession();
 
+  console.log("Session:", data.session);
+
   if (!data.session) {
     alert("Please login first!");
     return;
@@ -11,7 +13,7 @@ async function createPage() {
   const name = document.getElementById("name").value;
   const mood = document.getElementById("mood").value;
   const theme = document.getElementById("theme").value;
-
+ 
   const response = await fetch(
     "https://wqdkvdnxxaqgynypwnee.supabase.co/functions/v1/generate-love",
     {
@@ -23,6 +25,7 @@ async function createPage() {
       body: JSON.stringify({ name, mood, theme })
     }
   );
+  
 
   const result = await response.json();
 

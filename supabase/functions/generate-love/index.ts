@@ -7,7 +7,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
-  // Handle CORS preflight
+  // ✅ Handle CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -19,57 +19,113 @@ serve(async (req) => {
   }
 
   try {
-    const { name, mood, theme } = await req.json();
+    // ===============================
+    // 1️⃣ Validate Authorization
+    // ===============================
+    const authHeader = req.headers.get("Authorization");
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data: userData } = await supabase.auth.getUser(token);
-
-    if (!userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Access-Control-Allow-Origin": "*" }
-      });
+    if (!authHeader) {
+      throw new Error("Missing Authorization header");
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
+    // Auth client (uses ANON key)
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+
+    const { data: userData, error: userError } =
+      await supabaseAuth.auth.getUser(token);
+
+    if (userError || !userData?.user) {
+      throw new Error("Invalid JWT");
+    }
+
+    // ===============================
+    // 2️⃣ Read Request Body
+    // ===============================
+    const { name, mood, theme } = await req.json();
+
+    if (!name || !mood || !theme) {
+      throw new Error("Missing required fields");
+    }
+
+    // ===============================
+    // 3️⃣ Generate Letter via Gemini
+    // ===============================
     const prompt = `
-    Write a ${mood} romantic love letter for ${name}.
-    250 words. Emotional and unique.
-    `;
+Write a ${mood} romantic love letter for ${name}.
+Make it emotional, poetic and around 250 words.
+`;
 
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${Deno.env.get("GEMINI_API_KEY")}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Deno.env.get("GEMINI_API_KEY")}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }]
         })
       }
     );
 
+    if (!geminiResponse.ok) {
+      const text = await geminiResponse.text();
+      throw new Error("Gemini API error: " + text);
+    }
+
     const geminiData = await geminiResponse.json();
-    const letter = geminiData.candidates[0].content.parts[0].text;
 
-    const slug = name.toLowerCase().replace(/\s/g, "-") + "-" + Date.now();
+    if (
+      !geminiData.candidates ||
+      !geminiData.candidates.length ||
+      !geminiData.candidates[0].content.parts
+    ) {
+      throw new Error("Invalid Gemini response");
+    }
 
-    await supabase.from("love_sites").insert([
-      {
-        user_id: userData.user.id,
-        name,
-        mood,
-        theme,
-        letter,
-        slug
-      }
-    ]);
+    const letter =
+      geminiData.candidates[0].content.parts[0].text;
 
+    // ===============================
+    // 4️⃣ Generate Slug
+    // ===============================
+    const slug =
+      name.toLowerCase().replace(/\s+/g, "-") +
+      "-" +
+      Date.now();
+
+    // ===============================
+    // 5️⃣ Insert Into Database
+    // ===============================
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { error: insertError } =
+      await supabaseAdmin.from("love_sites").insert([
+        {
+          user_id: userData.user.id,
+          name,
+          mood,
+          theme,
+          letter,
+          slug
+        }
+      ]);
+
+    if (insertError) {
+      throw new Error("DB Insert Error: " + insertError.message);
+    }
+
+    // ===============================
+    // 6️⃣ Return Slug
+    // ===============================
     return new Response(JSON.stringify({ slug }), {
       headers: {
         "Content-Type": "application/json",
@@ -78,12 +134,23 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Server Error" }), {
-      status: 500,
-      headers: { "Access-Control-Allow-Origin": "*" }
-    });
+    console.error("🔥 REAL ERROR:", error);
+
+    return new Response(
+      JSON.stringify({
+        error: error.message
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      }
+    );
   }
 });
+
 
 
 /* To invoke locally:
