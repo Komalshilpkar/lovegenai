@@ -26,5 +26,12 @@ async function createPage() {
 
   const result = await response.json();
 
+  console.log("Function response:", result);
+
+  if (!result.slug) {
+    alert("Error generating page");
+    return;
+  }
+
   window.location.href = `/p/${result.slug}`;
 }
