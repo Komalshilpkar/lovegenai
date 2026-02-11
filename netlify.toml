@@ -1,7 +1,4 @@
-[build]
-  functions = "netlify/functions"
-
 [[redirects]]
   from = "/p/*"
   to = "/love.html"
-  status = 200  
+  status = 200
